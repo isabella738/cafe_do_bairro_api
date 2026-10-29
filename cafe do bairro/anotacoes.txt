@@ -1,0 +1,44 @@
+lembrar de por: categorias
+
+item:
+    nome
+    tipo (bolo, bebida, salgado, outro)
+    valor
+    status (1 = disponível; 0 = temporariamente indisponível)
+
+pedido
+    nome da pessoa
+    telefone
+    prazo
+    itens
+    comentario
+    valor total*
+    status*
+    codigo*
+
+* = não é definido diretamente pelo usuário
+
+o usuario recebe por sms um comprovante do pedido junto com um codigo, que pode ser
+usado no aplicativo para ver detalhes dele
+
+estados de encomenda: 
+    - 0: aguardando confirmação
+    - 1: aceito
+    - 2: em preparo
+    - 3: pronto
+
+já tem:
+    encomendas:
+        - criar
+        - ver todas ou uma
+        - editar
+        - excluir por
+            - recusa
+            - cancelamento
+    
+    cardapio:
+        - criar
+        - ver*
+        - excluir item
+        - editar*
+* = não tem
