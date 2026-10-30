@@ -1,18 +1,16 @@
-lembrar de por: categorias
-
 item:
     nome
-    tipo (bolo, bebida, salgado, outro)
+    categoria (bolo, bebida, salgado, outro)
     valor
     status (1 = disponível; 0 = temporariamente indisponível)
+    numero
 
 pedido
     nome da pessoa
     telefone
     prazo
-    itens
+    itens (lista de numeros)
     comentario
-    valor total*
     status*
     codigo*
 
@@ -27,18 +25,39 @@ estados de encomenda:
     - 2: em preparo
     - 3: pronto
 
-já tem:
-    encomendas:
-        - criar
-        - ver todas ou uma
-        - editar
-        - excluir por
-            - recusa
-            - cancelamento
-    
-    cardapio:
-        - criar
-        - ver*
-        - excluir item
-        - editar*
+VISUALIZAR:
+    - cardápio (com/sem filtros de categoria)
+    - pedidos (por prazo) (com/sem busca)
+    - ver pedido por código
+
+CRIAR;
+    - novo item do cardápio
+    - novo pedido
+    - nova categoria
+
+MODIFICAR;
+    - status de pedido
+    - informações do pedido
+    - informações de item
+
+EXCLUIR:
+    - pedido (recusa, cancelamento, concluído)
+    - item (se não houverem pedidos com este item)
+    - categoria (os itens dentro dela são movidos para 'outros')
+
 * = não tem
+
+colinhas
+esqueleto do_:
+            try:
+                dados = json.loads(corpo)
+                
+            except (json.JSONDecodeError, UnicodeDecodeError):
+                self.enviar(400, {"erro": "JSON inválido"})
+
+erros:
+self.enviar(404, {"erro":"não encontrado."})
+200 = requisição bem sucedida e retornar
+204 = o mesmo sem retornar
+201 = recurso criado
+self.enviar(400, {"erro":"pedido nao encontrado."}) (erro de sintaxe)

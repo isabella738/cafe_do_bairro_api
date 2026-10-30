@@ -1,0 +1,5 @@
+bolo
+bebida
+salgado
+doce
+outro
