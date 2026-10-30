@@ -1,6 +1,8 @@
-from datetime import datetime
+from datetime import datetime, date
 import random
 import string
+import json
+import os
 
 # verificam formato de entrada e outras coisas
 def verificar_valor(valor):
@@ -14,7 +16,7 @@ def verificar_valor(valor):
     return ""
 
 def verificar_nome_produto(nome, lista):
-    if not isinstance(nome, str) or not item.strip():
+    if not isinstance(nome, str) or not nome.strip():
         return "conteudo invalido."
     
     if item_duplicado(nome, lista):
@@ -47,20 +49,20 @@ def verificar_data(prazo, lista):
     
     return ""
 
-def verificar_pedido(numeros, lista, data):
-    itens = [retornar_item(numero) for numero in numeros]
+def verificar_pedido(codigos, lista_itens, lista_pedidos, data):
+    itens = [retornar_item(codigo, lista_itens) for codigo in codigos]
 
     if len(itens) <= 0:
         return "pedido vazio."
 
     for item in itens:
-        if not any(item["nome"] == produto["nome"] for produto in lista):
+        if not any(item["nome"] == produto["nome"] for produto in lista_itens):
             return "um ou mais produtos não existem no cardápio."
         if item["status"] == 0:
             return "item temporariamente indisponível."
 
-    bolos = sum(1 for item in itens if item["tipo"] == "bolo")
-    if bolos + bolos_no_dia(data, lista) >= 5:
+    bolos = sum(1 for item in itens if item["categoria"] == "bolo")
+    if bolos + bolos_no_dia(data, lista_pedidos) >= 5:
         return "o pedido estoura o máximo permitido de encomendas feitas para este dia."
     
     return ""
@@ -70,17 +72,16 @@ def bolos_no_dia(data, lista):
     bolos = 0
     for pedido in lista:
         if pedido["prazo"] == data:
-            bolos += sum(1 for item in pedido["itens"] if item["tipo"] == "bolo")
+            bolos += sum(1 for item in pedido["itens"] if item["categoria"] == "bolo")
 
     return bolos
 
 def item_duplicado(nome, lista):
-    for item in lista:
-        if nome == lista["nome"]:
-            return 1
+    if any(item["nome"] == nome for item in lista):
+        return 1
     return 0
 
-def criar_codigo(lista):
+def gerar_codigo(lista):
     caracteres = string.ascii_uppercase + string.ascii_lowercase + string.digits
     
     while True:
@@ -89,8 +90,36 @@ def criar_codigo(lista):
         if not any(codigo == pedido["codigo"] for pedido in lista):
             return codigo
 
-def retornar_item(numero, lista):
+def retornar_item(codigo, lista):
     for item in lista:
-        if item["numero"] == numero:
+        if item["codigo"] == codigo:
             return item
     return -1
+
+# carregamento e salvamento de dados
+def salvar_dados(nome, variavel):
+    try:
+        with open("dados/" + nome, "w", encoding="utf-8") as arquivo:
+            ponto = nome.find(".")
+            if nome[ponto + 1:] == "json":
+                json.dump(variavel, arquivo, ensure_ascii=False, indent=4)
+            else:
+                arquivo.write("\n".join(variavel))
+
+    except FileNotFoundError:
+        raise 
+
+def carregar_dados(nome):
+    try:
+        with open("dados/" + nome, "r", encoding = "utf-8") as arquivo:
+            ponto = nome.find(".")
+            if nome[ponto + 1:] == "json":
+                variavel = json.load(arquivo)
+            else:
+                variavel = arquivo.read().splitlines()
+            
+            return variavel
+    except FileNotFoundError:
+        print(f"dados/{nome}")
+        print("Diretório atual:", os.getcwd())
+        raise 

@@ -1,12 +1,14 @@
 from http.server import HTTPServer, BaseHTTPRequestHandler
-import json
+from urllib.parse import urlparse, parse_qs
+from datetime import date
 from functions import *
-from save import *
+import json
 
-lista_itens = carregar_itens()
-lista_pedidos = carregar_pedidos()
-categorias = carregar_categorias()
-info = carregar_informacoes()    
+lista_itens = []
+lista_pedidos = []
+categorias = []
+info = []
+variaveis = [lista_itens, lista_pedidos, info, categorias]
 
 class Servidor(BaseHTTPRequestHandler):
 
@@ -20,73 +22,78 @@ class Servidor(BaseHTTPRequestHandler):
 
         self.wfile.write(corpo)
 
-    # visualizar
+    # listar
     def do_GET(self):
-        tam = int(self.headers.get("Content-Length", 0))
-        corpo = self.rfile.read(tam)
+        url = urlparse(self.path)
+        parametros = parse_qs(url.query)
 
-        if self.path == "/encomendas":
-            try:
-                dados = json.loads(corpo)
-                chave = dados["chave"]
-                busca = dados["busca"]
+        if url.path == "/encomendas":
+            # exibe todas as encomendas, preferencialmente por ordem crescente de prazo, mas também
+            # pode filtrar por alguma chave
 
-                # ver todas as encomendas
-                if chave == 0:
-                    lista_pedidos.sort(key=lambda item: item["prazo"])
-                    self.enviar(200, lista_pedidos)
+            chave = parametros.get("chave", [None])[0]
+            busca = parametros.get("busca", [None])[0]
+
+            lista_pedidos.sort(key=lambda item: item["prazo"])
+
+            # ver todas as encomendas
+            if chave == None:
+                self.enviar(200, lista_pedidos)
+                return
+            
+            # chave não existe
+            if not chave in lista_pedidos[0]:
+                self.enviar(404, {"erro":"não encontrado."})
+                return
+            
+            if chave == "status":
+                try:
+                    busca = int(busca)
+                except ValueError:
+                    self.enviar(400, {"erro":"status inválido."})
                     return
-                
-                if not chave in pedido:
-                    self.enviar(404, {"erro":"não encontrado."})
+            
+            # exibir com base em filtro
+            lista = [p for p in total_pedidos if p[chave] == busca]
+            self.enviar(200, lista)
+
+        elif url.path == "/cardapio":
+            # lista os itens do cardápio na íntegra ou por categoria
+
+            tipo = parametros.get("categoria", [None])[0]
+
+            if tipo == None:
+                self.enviar(200, lista_itens)
+                return
+            
+            for categoria in categorias:
+                if tipo == categoria:
+                    lista = [i for i in lista_itens if i["categoria"] == categoria]
+                    self.enviar(200, lista)
                     return
-                
-                # exibir com base em filtro
-                lista = [p for p in total_pedidos if p[chave] == busca]
-                self.enviar(200, lista)
-
-            except (json.JSONDecodeError, UnicodeDecodeError):
-                self.enviar(400, {"erro": "JSON inválido"})
-
-        elif self.path == "/cardapio":
-
-            try:
-                dados = json.loads(corpo)
-                tipo = dados["categoria"]
-
-                if categoria == 0:
-                    self.enviar(200, lista_itens)
-                    return
-                
-                for categoria in categorias:
-                    if tipo == categoria:
-                        lista = [i for i in lista_itens if i["categoria"] == categoria]
-                        self.enviar(200, lista)
-                        return
-                
-                self.enviar(404, {"erro":"categoria não encontrada"})
+            
+            self.enviar(404, {"erro":"categoria não encontrada"})
                         
-            except (json.JSONDecodeError, UnicodeDecodeError):
-                self.enviar(400, {"erro": "JSON inválido"})
-
-        elif self.path == "/informações":
+        elif url.path == "/informacoes":
             self.enviar(200, info)
 
-        elif self.path == "/produto":
-            try:
-                dados = json.loads(corpo)
-                numero = dados["numero"]
+        elif url.path == "/produto":
+            # como os itens de um pedido são armazenados como números, acho que isso pode ser útil.
+            # isso devolve as informaçẽos de um item dado seu número/código
 
-                item = retornar_item(numero, lista_itens)
-                if item != -1:
-                    self.enviar(200, item)
-                    return
-                
-                self.enviar(404, {"erro":"item não encontrado."})
-                
-            except (json.JSONDecodeError, UnicodeDecodeError):
-                self.enviar(400, {"erro": "JSON inválido"})
+            codigo = parametros.get("codigo", [None])[0]
 
+            if codigo == None:
+                self.enviar(400, {"erro":"cliente não enviou parâmetro."})
+                return
+
+            item = retornar_item(codigo, lista_itens)
+            if item != -1:
+                self.enviar(200, item)
+                return
+            
+            self.enviar(404, {"erro":"item não encontrado."})
+                
         else:
             self.enviar(404, {"erro":"não encontrado."})
 
@@ -116,7 +123,7 @@ class Servidor(BaseHTTPRequestHandler):
 
                 # itens do pedido
                 itens = dados.get("itens")
-                mensagens.append(verificar_pedido(itens, lista_itens))
+                mensagens.append(verificar_pedido(itens, lista_itens, lista_pedidos, prazo))
 
                 # observações sobre o pedido, se houver
                 comentario = dados.get("comentario")
@@ -135,11 +142,10 @@ class Servidor(BaseHTTPRequestHandler):
                     "itens": itens,
                     "comentario": comentario,
                     "status": 0,
-                    "codigo": criar_codigo(lista_pedidos)
+                    "codigo": gerar_codigo(lista_pedidos)
                 }
 
                 lista_pedidos.append(pedido)
-                salvar_pedidos(lista_pedidos)
                 
                 self.enviar(201, pedido)
 
@@ -161,7 +167,7 @@ class Servidor(BaseHTTPRequestHandler):
                 mensagens.append(verificar_valor(valor))
 
                 # categoria do produto
-                categoria = dados.categoria("categoria")
+                categoria = dados.get("categoria")
                 if not categoria in categorias:
                     mensagens.append("categoria não encontrada.")
 
@@ -174,14 +180,13 @@ class Servidor(BaseHTTPRequestHandler):
                 # montar o item
                 item = {
                     "nome": nome,
-                    "valor": valor,
                     "categoria": categoria,
-                    "numero": lista_itens.top()["numero"] + 1,
-                    "status": 1
+                    "valor": valor,
+                    "status": 1,
+                    "codigo": gerar_codigo(lista_itens)
                 }
 
                 lista_itens.append(item)
-                salvar_itens(lista_itens)
 
                 self.enviar(201, item)
                 
@@ -194,13 +199,12 @@ class Servidor(BaseHTTPRequestHandler):
                 dados = json.loads(corpo)
                 novo = dados["categoria"]
 
-                if categoria in categorias:
+                if novo in categorias:
                     self.enviar(400, {"erro":"categoria já existe."})
                     return
 
                 categorias.append(novo)
-                salvar_categorias(categorias)
-                self.enviar(200, categoria)
+                self.enviar(200, novo)
                 
             except (json.JSONDecodeError, UnicodeDecodeError):
                 self.enviar(400, {"erro": "JSON inválido"})
@@ -208,23 +212,22 @@ class Servidor(BaseHTTPRequestHandler):
         else:
             self.enviar(404, {"erro":"não encontrado."})
 
-    # modificar informação
+    # modificar/atualizar
     def do_PATCH(self):
         tam = int(self.headers.get("Content-Length", 0))
         corpo = self.rfile.read(tam)
 
-        if self.path == "/modificar_status":
+        if self.path == "/atualizar_status":
 
             try:
                 dados = json.loads(corpo)
                 
-                encomenda = dados["pedido"]
+                codigo = dados["codigo"]
                 novo_status = dados["status"]
 
                 for pedido in lista_pedidos:
-                    if encomenda["codigo"] == pedido["codigo"]:
+                    if codigo == pedido["codigo"]:
                         pedido["status"] = novo_status
-                        salvar_pedidos(lista_pedidos)
                         self.enviar(204, "")
                         return
                 
@@ -239,7 +242,7 @@ class Servidor(BaseHTTPRequestHandler):
                 dados = json.loads(corpo)
                 mensagens = []
 
-                encomenda = dados["encomenda"]
+                codigo = dados["codigo"]
                 novo = dados["novo_conteudo"]
                 chave = dados["chave"] # nome da chave a ser modificada                    
 
@@ -257,7 +260,7 @@ class Servidor(BaseHTTPRequestHandler):
                             case "prazo":
                                 mensagens.append(verificar_data(novo, lista_pedidos))
                             case "itens":
-                                mensagens.append(verificar_pedido(novo, lista_itens))
+                                mensagens.append(verificar_pedido(novo, lista_itens, pedido["prazo"]))
                             case "comentario":
                                 pass
                             case "nome":
@@ -274,8 +277,7 @@ class Servidor(BaseHTTPRequestHandler):
                             return
                         
                         pedido[chave] = novo
-                        salvar_pedidos(lista_pedidos)
-                        self.enviar(204,{"status":"modificação bem sucedida"})
+                        self.enviar(204, "")
                         return
 
                 self.enviar(404, {"erro": "pedido não encontrado."})
@@ -289,12 +291,12 @@ class Servidor(BaseHTTPRequestHandler):
                 dados = json.loads(corpo)
                 mensagens = []
 
-                produto = dados["item"]
+                codigo = dados["codigo"]
                 novo = dados["novo_conteudo"]
                 chave = dados["chave"] # nome da chave a ser modificada                    
 
                 for item in lista_itens:
-                    if produto["codigo"] == item["codigo"]:
+                    if codigo == item["codigo"]:
 
                         match chave:
                             case "valor":
@@ -318,8 +320,7 @@ class Servidor(BaseHTTPRequestHandler):
                             return
                         
                         item[chave] = novo
-                        salvar_itens(lista_itens)
-                        self.enviar(204,{"status":"modificação bem sucedida"})
+                        self.enviar(204, "")
                         return
 
                 self.enviar(404, {"erro": "item não encontrado."})
@@ -339,14 +340,38 @@ class Servidor(BaseHTTPRequestHandler):
                     return
                 
                 info[chave] = novo
-                salvar_informacoes(info)
-                self.enviar(204,{"status":"modificação bem sucedida"})
+                self.enviar(204, "")
                 return
 
                 self.enviar(404, {"erro": "item não encontrado."})
                 
             except (json.JSONDecodeError, UnicodeDecodeError):
                 self.enviar(400, {"erro": "JSON inválido"})
+
+        elif self.path == "/carregar_dados":
+            try:
+                nomes = ["itens.json", "pedidos.json", "info.json", "categorias.txt"]
+                
+                contador = 0
+                for i in range(4):
+                    variaveis[i][:] = carregar_dados(nomes[i])
+                    contador += len(variaveis[i])
+
+                self.enviar(200, variaveis)
+            
+            except FileNotFoundError:
+                self.enviar(404, {"erro":"arquivo não encontrado."})
+
+        elif self.path == "/salvar_dados":
+            try:
+                nomes = ["itens.json", "pedidos.json", "info.json", "categorias.txt"]
+                
+                for i in range(4):
+                    salvar_dados(nomes[i], variaveis[i])
+                self.enviar(204, "")
+            
+            except FileNotFoundError:
+                self.enviar(404, {"erro":"arquivo não encontrado."})
 
         else:
             self.enviar(404, {"erro":"não encontrado."})
@@ -356,49 +381,33 @@ class Servidor(BaseHTTPRequestHandler):
         tam = int(self.headers.get("Content-Length", 0))
         corpo = self.rfile.read(tam)
 
-        if self.path == "/recusar_pedido":
-            # enviar mensagem do corpo por sms
-            # a ideia é que a requisição envie traga uma mensagem de justificativa para o cliente
+        if self.path == "/excluir_pedido": 
+            # para concluir ou recusar um pedido
+
             try:
                 dados = json.loads(corpo)
-                encomenda = dados["pedido"]
+                codigo = dados["codigo"]
                 
                 for pedido in lista_pedidos:
-                    if encomenda == pedido:
+                    if codigo == pedido["codigo"]:
                         lista_pedidos.remove(pedido)
-                        self.enviar(204, {"status":"bem-sucedido"})
+                        self.enviar(204, "")
                         return
+                        
                 self.enviar(404, {"erro":"não encontrado."})
                 
             except (json.JSONDecodeError, UnicodeDecodeError):
                 self.enviar(400, {"erro": "JSON inválido"})
 
-        elif self.path == "/concluir_pedido":
-            # depois que o pedido já foi entregue
-            try:
-                dados = json.loads(corpo)
-                encomenda = dados["pedido"]
-                
-                for pedido in lista_pedidos:
-                    if encomenda == pedido:
-                        lista_pedidos.remove(pedido)
-                        self.enviar(204, {"status":"bem-sucedido"})
-                        return
-                self.enviar(404, {"erro":"não encontrado."})
-                
-            except (json.JSONDecodeError, UnicodeDecodeError):
-                self.enviar(400, {"erro": "JSON inválido"})
-
-        elif self.path == "/cancelar_pedido":
-            tam = int(self.headers.get("Content-Length", 0))
-            corpo = self.rfile.read(tam)
+        elif self.path == "/cancelar_pedido": 
+            # para um cliente cancelar um pedido
 
             try:
                 dados = json.loads(corpo)
-                encomenda = dados["encomenda"]
+                codigo = dados["codigo"]
 
                 for pedido in lista_pedidos:
-                    if encomenda["codigo"] == pedido["codigo"]:
+                    if codigo == pedido["codigo"]:
 
                         diferenca = date.today() - pedido["prazo"]
                         if diferenca.total_seconds()/3600 <= 24:
@@ -406,7 +415,7 @@ class Servidor(BaseHTTPRequestHandler):
                             return
 
                         lista_pedidos.remove(pedido)
-                        self.enviar(204, {"status":"bem-sucedido"})
+                        self.enviar(204, "")
                 
                 self.enviar(404, {"erro": "pedido não encontrado."})
 
@@ -414,46 +423,57 @@ class Servidor(BaseHTTPRequestHandler):
                 self.enviar(400, {"erro": "JSON inválido"})
 
         elif self.path == "/excluir_item":
-            tam = int(self.headers.get("Content-Length", 0))
-            corpo = self.rfile.read(tam)
+            # itens não podem ser excluídos se estiverem em algum pedido existente.
+            # é preciso antes recusá-lo ou concluí-lo nesse caso
 
             try:
                 dados = json.loads(corpo)
-                numero = dados["item"]
-                produto = retornar_item(numero, lista_itens)
+                codigo = dados["codigo"]
+                produto = retornar_item(codigo, lista_itens)
 
-                for item in itens:
-                    if item["nome"] == produto["nome"]:
+                for item in lista_itens:
+                    if codigo == produto["codigo"]:
                         
                         for pedido in lista_pedidos:
-                            if any(numero == i for i in pedido["itens"]):
+                            if any(codigo == i["codigo"] for i in pedido["itens"]):
                                 self.enviar(403, {"erro":"existe pedido ativo com este item."})
                                 return
                         
                         lista_itens.remove(item)
-                        self.enviar(204, {"status":"bem-sucedido."})
+                        self.enviar(204, "")
                         return
+
+                self.enviar(404, {"erro":"item não encontrado."})
 
             except (json.JSONDecodeError, UnicodeDecodeError):
                 self.enviar(400, {"erro": "JSON inválido"})
 
         elif self.path == "/excluir_categoria":
-            tam = int(self.headers.get("Content-Length", 0))
-            corpo = self.rfile.read(tam)
+            # itens da categoria excluída vão para 'outros'
 
             try:
                 dados = json.loads(corpo)
                 categoria = dados["categoria"]
+
+                if not categoria in categorias:
+                    self.enviar(404, {"erro":"categoria não encontrada"})
 
                 for item in lista_itens:
                     if item["categoria"] == categoria:
                         item["categoria"] = "outros"
                 
                 categorias.remove(categoria)
-                self.enviar(204)
+                self.enviar(204, "")
                 
             except (json.JSONDecodeError, UnicodeDecodeError):
                 self.enviar(400, {"erro": "JSON inválido"})
 
         else:
             self.enviar(404, {"erro":"não encontrado."})
+
+if __name__ == "__main__":
+    servidor = HTTPServer(("localhost", 8000), Servidor)
+
+    print("Servidor iniciado em http://localhost:8000")
+
+    servidor.serve_forever()

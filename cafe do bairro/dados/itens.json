@@ -1,1 +1,9 @@
-[]
+[
+    {
+        "nome": "Bolo de Laranja",
+        "categoria": "bolo",
+        "valor": "9,99",
+        "status": 1,
+        "codigo": "a5ria"
+    }
+]
