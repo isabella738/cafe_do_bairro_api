@@ -1,132 +1,313 @@
-from datetime import datetime, date
-import random
-import string
-import json
+from auxiliary import *
+import variables as v
 
-# verificam formato da entrada 
+# GET
+def exibir_pedidos(caminho):
+    if not v.lista_pedidos:
+        return 403, "lista vazia."
 
-def verificar_string(nome):
-    if not isinstance(nome, str) or not nome.strip():
-        return "conteudo invalido."
+    v.lista_pedidos.sort(key=lambda item: item["prazo"])
+
+    chave = caminho[1] if len(caminho) > 1 else None
+    conteudo = caminho[2] if len(caminho) > 2 else None
+
+    if not chave:
+        return 200, v.lista_pedidos
     
-    return ""
-
-def verificar_int(numero, a, b):
-    if not isinstance(numero, int):
-        return "conteudo invalido."
+    if chave and conteudo is None:
+        return 400, "falta conteúdo."
     
-    if numero < a or numero > b:
-        return "intervalo inválido"
+    if chave in v.lista_pedidos[0]:
+        lista = [i for i in v.lista_pedidos if i[chave] == conteudo]
+        return 200, lista
 
-    return ""
+    return 404, "chave não encontrada."
 
-def verificar_valor(valor):
-    if (erro := verificar_string(valor)) != "":
-        return erro
+def exibir_produtos(caminho):
+    if not v.lista_itens:
+        return 403, "lista vazia."
 
-    partes = valor.split(",")
-    if len(partes) != 2 or not partes[0].isdigit() or not partes[1].isdigit() or len(partes[1]) != 2:
-        return "formato monetario invalido."
+    chave = caminho[1] if len(caminho) > 1 else None
+    conteudo = caminho[2] if len(caminho) > 2 else None
 
-    return ""
-
-def verificar_telefone(telefone):
-    if (erro := verificar_string(telefone)) != "":
-        return erro
+    if not chave:
+        return 200, v.lista_itens
     
-    if not telefone.isdigit() or len(telefone) != 11:
-        return "formato de telefone invalido."
+    if chave and conteudo is None:
+        return 400, "falta conteúdo."
     
-    return ""
+    if chave in v.lista_itens[0]:
+        lista = [i for i in v.lista_itens if i[chave] == conteudo]
+        return 200, lista
 
-def verificar_data(prazo):
-    try:
-        dia = datetime.strptime(prazo, "%Y-%m-%d").date()
+    return 404, "chave não encontrada."
 
-        if horas_ate(prazo) <= 0:
-            return "a data já passou."
+def exibir_info(caminho):
+    chave = caminho[1] if len(caminho) > 1 else None
 
-    except (ValueError, TypeError):
-        return "data invalida."
+    if not chave:
+        return 200, v.info
+        
+    if chave in v.info:
+        return 200, v.info[chave]
+
+    return 404, "chave não encontrada."
+
+# POST
+def criar_pedido(dados):
+    if not isinstance(dados, dict):
+        return 400, "dados em formato inválido."
+
+    mensagens = []
+
+    # nome do cliente
+    nome = dados.get("nome")
+    mensagens.append(verificar_string(nome))
+
+    # numero de telefone
+    telefone = dados.get("telefone")
+    mensagens.append(verificar_telefone(telefone))
+
+    # data de entrega
+    prazo = dados.get("prazo")
+    mensagens.append(verificar_data(prazo))
+
+    # itens do pedido
+    itens = dados.get("itens")
+    mensagens.append(verificar_pedido(itens, v.lista_itens))
+
+    # observações sobre o pedido, se houver
+    comentario = dados.get("comentario")
+
+    # envio de erros
+    erros = [m for m in mensagens if m != ""]
+    if erros:
+        return 400, erros
     
-    return ""
+    # verifica se o pedido respeita o limite do dia
+    if (erro := disponibilidade(prazo, itens, None)):
+        return 403, erro
 
-def pertence(item, lista):
-    if not item in lista:
-        return "campo/item não pertence ao objeto."
-    return ""
+    # montar pedido
+    pedido = {
+        "nome": nome,
+        "telefone": telefone,
+        "prazo": prazo,
+        "itens": itens,
+        "comentario": comentario,
+        "status": 0,
+        "codigo": gerar_codigo(v.lista_pedidos)
+    }
 
-def verificar_pedido(codigos, lista_itens, lista_pedidos, data):
-    if not isinstance(codigos, list) or len(codigos) <= 0:
-        return "pedido vazio."
+    v.lista_pedidos.append(pedido)
+    return 201, pedido
 
-    itens = [retornar_item(codigo, lista_itens) for codigo in codigos]
+def criar_produto(dados):
+    if not isinstance(dados, dict):
+        return 400, "dados em formato inválido."
 
-    if any(item == -1 for item in itens):
-        return "pedido contém itens inexistentes."
+    mensagens = []
 
-    if any(item["status"] == 0 for item in itens):
-        return "pedido contém itens indisponíveis."
+    # nome do produto
+    nome = dados.get("nome")
+    mensagens.append(verificar_string(nome))
+
+    # valor do produto
+    valor = dados.get("valor")
+    mensagens.append(verificar_valor(valor))
+
+    # categoria do produto
+    categoria = dados.get("categoria")
+    mensagens.append(pertence(categoria, v.categorias))
+
+    # descricao do produto
+    descricao = dados.get("descricao")
+
+    # envio de erros
+    erros = [m for m in mensagens if m != ""]
+    if erros:
+        return 400, erros
     
-    return ""
+    # montar o item
+    item = {
+        "nome": nome,
+        "categoria": categoria,
+        "valor": valor,
+        "descricao": descricao,
+        "status": 1,
+        "codigo": gerar_codigo(v.lista_itens)
+    }
 
-# outros
-def disponibilidade(data, codigos, lista_pedidos, lista_itens):
-    if not isinstance(codigos, list) or len(codigos) <= 0:
-        return "pedido vazio."
+    v.lista_itens.append(item)
+    return 201, item
 
-    itens = [retornar_item(codigo, lista_itens) for codigo in codigos]
+def criar_categoria(dados):
+    if not isinstance(dados, dict):
+        return 400, "dados em formato inválido."
 
-    bolos = sum(1 for i in itens if i["categoria"] == "bolo")
+    novo = dados.get("categoria")
 
-    for pedido in lista_pedidos:
-        if pedido["prazo"] == data:
-            itens = [retornar_item(codigo, lista_itens) for codigo in pedido["itens"]]
-            bolos += sum(1 for item in itens if item["categoria"] == "bolo")
-    
-    if bolos > 5:
-        return "limite diário de encomendas alcançado para este dia."
-    return ""
+    if (erro := verificar_string(novo)):
+        return 400, erro
 
-def horas_ate(data): # pressupõe-se que o formato já esteja verificado ao chegar aqui
-    dia = datetime.strptime(data, "%Y-%m-%d").date()
-    return (dia - date.today()).total_seconds()/3600
+    if novo in v.categorias:
+        return 400, "categoria já existe."
 
-def gerar_codigo(lista):
-    caracteres = string.ascii_uppercase + string.ascii_lowercase + string.digits
-    
-    while True:
-        codigo = "".join(random.choices(caracteres, k=5))
+    v.categorias.append(novo)
+    return 201, novo
 
-        if not any(codigo == pedido["codigo"] for pedido in lista):
-            return codigo
+# PATCH
+def editar_pedido(dados, caminho):
+    if not v.lista_pedidos:
+        return 403, "lista vazia."
 
-def retornar_item(codigo, lista):
-    for item in lista:
-        if item["codigo"] == codigo:
-            return item
-    return -1
+    codigo = caminho[1] if len(caminho) > 1 else None
 
-# carregamento e salvamento de dados
-def salvar_dados(nome, variavel):
-    try:
-        with open("dados/" + nome, "w", encoding="utf-8") as arquivo:
-            if nome.endswith(".json"):
-                json.dump(variavel, arquivo, ensure_ascii=False, indent=4)
-            else:
-                arquivo.write("\n".join(variavel))
+    if (erro := verificar_string(codigo)):
+        return 400, erro
 
-    except FileNotFoundError:
-        raise 
+    for pedido in v.lista_pedidos:
+        if codigo == pedido["codigo"]:
 
-def carregar_dados(nome):
-    try:
-        with open("dados/" + nome, "r", encoding = "utf-8") as arquivo:
-            if nome.endswith(".json"):
-                variavel = json.load(arquivo)
-            else:
-                variavel = arquivo.read().splitlines()
+            novo = pedido.copy()
+            for chave, conteudo in dados.items():
+                
+                erro = ""
+                match chave:
+                    case "telefone":
+                        erro = verificar_telefone(conteudo)
+                    case "nome":
+                        erro = verificar_string(conteudo)
+                    case "prazo":
+                        erro = verificar_data(conteudo) or disponibilidade(conteudo, pedido["itens"], None)
+                    case "itens":
+                        erro = verificar_pedido(conteudo, v.lista_itens) or disponibilidade(pedido["prazo"], conteudo, pedido)
+                    case "status":
+                        erro = verificar_int(conteudo, 0, 3)
+                    case "comentario":
+                        pass
+                    case "codigo":
+                        return 403, "campo não é editável."
+                    case _:
+                        return 404, "um ou mais campos informados não existem."
+                
+                if not erro:
+                    novo[chave] = conteudo
+                else:
+                    return 400, erro
             
-            return variavel
-    except FileNotFoundError:
-        raise 
+            pedido.update(novo)
+            return 204, ""
+
+    return 404, "pedido não encontrado."
+
+def editar_produto(dados, caminho):
+    if not v.lista_itens:
+        return 403, "lista vazia."
+
+    codigo = caminho[1] if len(caminho) > 1 else None
+
+    if (erro := verificar_string(codigo)):
+        return 400, erro
+
+    for item in v.lista_itens:
+        if codigo == item["codigo"]:
+
+            novo = item.copy()
+            for chave, conteudo in dados.items():
+                
+                erro = ""
+                match chave:
+                    case "nome":
+                        erro = verificar_string(conteudo)
+                    case "categoria":
+                        erro = verificar_string(conteudo) or pertence(conteudo, v.categorias)
+                    case "valor":
+                        erro = verificar_valor(conteudo)
+                    case "status":
+                        erro = verificar_int(conteudo, 0, 1)
+                    case "descricao":
+                        pass
+                    case "codigo":
+                        return 403, "campo não é editável."
+                    case _:
+                        return 404, "um ou mais campos informados não existem."
+                
+                if not erro:
+                    novo[chave] = conteudo
+                else:
+                    return 400, erro
+            
+            item.update(novo)
+            return 204, ""
+
+    return 404, "item não encontrado."
+
+def editar_info(dados):
+    for chave, conteudo in dados.items():
+
+        if chave in v.info:
+            v.info[chave] = conteudo
+        else:
+            return 404, "campo não encontrado."
+    
+    return 204, ""
+
+# DELETE
+def remover_pedido(caminho):
+    if not v.lista_pedidos:
+        return 403, "lista vazia."
+
+    codigo = caminho[1] if len(caminho) > 1 else None
+
+    if (erro := verificar_string(codigo)):
+        return 400, erro
+
+    for pedido in v.lista_pedidos:
+        if codigo == pedido["codigo"]:
+            v.lista_pedidos.remove(pedido)
+            return 204, ""
+    
+    return 404, "pedido não encontrado."
+
+def remover_produto(caminho):
+    if not v.lista_itens:
+        return 403, "lista vazia."
+
+    codigo = caminho[1] if len(caminho) > 1 else None
+
+    if (erro := verificar_string(codigo)):
+        return 400, erro
+
+    for pedido in v.lista_pedidos:
+        if any(codigo == i for i in pedido["itens"]):
+            return 403, "existem pedidos ativos com este item."
+
+    for item in v.lista_itens:
+        if codigo == item["codigo"]:
+    
+            v.lista_itens.remove(item)
+            return 204, ""
+    
+    return 404, "produto não encontrado."
+
+def remover_categoria(caminho):
+    categoria = caminho[1] if len(caminho) > 1 else None
+
+    if (erro := verificar_string(categoria)):
+        return 400, erro
+
+    if not categoria in v.categorias:
+        return 404, "categoria não encontrada."
+    
+    if categoria == "outros":
+        return 403, "categoria não removível."
+    
+    for item in v.lista_itens:
+        if item["categoria"] == categoria:
+            item["categoria"] = "outros"
+
+    v.categorias.remove(categoria)
+
+    return 204, ""
+

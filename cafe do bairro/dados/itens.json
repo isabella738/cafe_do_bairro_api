@@ -1,8 +1,9 @@
 [
     {
-        "nome": "Bolo de Laranja",
+        "nome": "Bolo de Cenoura",
         "categoria": "outros",
         "valor": "9,99",
+        "descricao": "Com ou sem cobertura de chocolate. Alérgicos: contém lactose",
         "status": 1,
         "codigo": "a5ria"
     },
@@ -10,6 +11,7 @@
         "nome": "Café Expresso",
         "categoria": "bebida",
         "valor": "3,99",
+        "descricao": null,
         "status": 1,
         "codigo": "jjuFF"
     },
@@ -17,6 +19,7 @@
         "nome": "Bolo de Chocolate",
         "categoria": "outros",
         "valor": "9,99",
+        "descricao": null,
         "status": 1,
         "codigo": "bVkl0"
     },
@@ -24,7 +27,24 @@
         "nome": "Brigadeiro 10 unidades",
         "categoria": "doces",
         "valor": "9,99",
+        "descricao": null,
         "status": 1,
         "codigo": "Df3eh"
+    },
+    {
+        "nome": "Brigadeiro 20 unidades",
+        "categoria": "doces",
+        "valor": "19,99",
+        "descricao": null,
+        "status": 1,
+        "codigo": "DRT0Z"
+    },
+    {
+        "nome": "Pão de Queijo",
+        "categoria": "salgado",
+        "valor": "9,99",
+        "descricao": "aviso: contem glútem",
+        "status": 1,
+        "codigo": "oCBmr"
     }
 ]

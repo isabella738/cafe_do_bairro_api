@@ -22,7 +22,18 @@
             "a5ria"
         ],
         "comentario": null,
-        "status": 0,
+        "status": 2,
         "codigo": "pe3ED"
+    },
+    {
+        "nome": "Zé Maria",
+        "telefone": "73900000000",
+        "prazo": "2026-11-01",
+        "itens": [
+            "a5ria"
+        ],
+        "comentario": "com bastante calda de chocolate",
+        "status": 0,
+        "codigo": "1Dec0"
     }
 ]

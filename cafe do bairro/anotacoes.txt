@@ -1,11 +1,20 @@
 *anexar imagens!!
 
+
+
+
+
+
+
+produto, categoria, encomenda, informação, cardápio
+
 item:
     nome
     categoria (bolo, bebida, salgado, outro)
     valor
     status (1 = disponível; 0 = temporariamente indisponível)
-    numero
+    descricao
+    codigo*
 
 pedido
     nome da pessoa
@@ -75,73 +84,51 @@ CAMINHOS
 GET 4/4 OK
 
 //ver pedidos OK
-curl -X GET http://localhost:8000/encomendas
+curl -X GET http://localhost:8000/encomenda
 
 //ver itens OK
-curl -X GET http://localhost:8000/cardapio
+curl -X GET http://localhost:8000/produto
 
 //ver info OK
-curl -X GET http://localhost:8000/informacoes
-
-//ver produto OK
-curl -X GET http://localhost:8000/produto?codigo=jjuFF
+curl -X GET http://localhost:8000/info
 
 ---------------------------------------------------------------
 POST 3/3
 //criar pedido OK
-curl -X POST http://localhost:8000/criar_pedido \
+curl -X POST http://localhost:8000/encomenda \
 -H "Content-Type: application/json" \
--d '{"nome": "Epaminondas", "telefone":"73900000000", "prazo":"2026-11-01", "itens": ["a5ria"], "comentário":""}'
+-d '{"nome": "Zé Maria", "telefone":"73900000000", "prazo":"2026-11-01", "itens": ["a5ria"], "comentario":"com bastante calda de chocolate"}'
 
 //criar item OK
-curl -X POST http://localhost:8000/criar_item \
+curl -X POST http://localhost:8000/produto \
 -H "Content-Type: application/json" \
--d '{"nome": "Brigadeiro 10 unidades", "categoria": "doces", "valor":"9,99"}'
+-d '{"nome": "Pão de Queijo", "categoria": "salgado", "valor":"9,99", "descricao":"aviso: contem glútem"}'
 
 //criar categoria OK
-curl -X POST http://localhost:8000/criar_categoria \
+curl -X POST http://localhost:8000/categoria \
 -H "Content-Type: application/json" \
--d '{"categoria": "doces"}'
+-d '{"categoria": "bolo"}'
 
 ---------------------------------------------------------------
 PATCH 4/6
-curl -X PATCH http://localhost:8000/atualizar_status \
+curl -X PATCH http://localhost:8000/encomenda/pe3ED \
 -H "Content-Type: application/json" \
--d '{"codigo": "pSB7c", "status": 10}'
+-d '{"status": 2}'
 
-curl -X PATCH http://localhost:8000/editar_pedido \
+curl -X PATCH http://localhost:8000/produto/oCBmr \
 -H "Content-Type: application/json" \
--d '{"codigo": "pe3ED", "novo_conteudo": "2026-11-01", "chave":"prazo"}'
+-d '{"categoria": "bolo"}'
 
-curl -X PATCH http://localhost:8000/editar_produto \
+curl -X PATCH http://localhost:8000/info \
 -H "Content-Type: application/json" \
--d '{"codigo": "jjuFF", "novo_conteudo": "bebida", "chave":"categoria"}'
+-d '{"nome": "Marta da Silva Sousa"}'
 
-curl -X PATCH http://localhost:8000/editar_informacoes \
--H "Content-Type: application/json" \
--d '{"novo_conteudo": "Marta da Silva Sousa", "chave":"nome"}'
-
-//carregar OK
-curl -X PATCH http://localhost:8000/carregar_dados
-
-//salvar OK
-curl -X PATCH http://localhost:8000/salvar_dados
 
 ---------------------------------------------------------------
 DELETE 4/4
-curl -X DELETE http://localhost:8000/excluir_pedido \
--H "Content-Type: application/json" \
--d '{"codigo": "pSB7c"}'
+curl -X DELETE http://localhost:8000/encomenda/MZaOy
 
-curl -X DELETE http://localhost:8000/cancelar_pedido \
--H "Content-Type: application/json" \
--d '{"codigo": "BIedc"}'
+curl -X DELETE http://localhost:8000/produto/a5ria
 
-curl -X DELETE http://localhost:8000/excluir_item \
--H "Content-Type: application/json" \
--d '{"codigo": "bVkl0"}'
-
-curl -X DELETE http://localhost:8000/excluir_categoria \
--H "Content-Type: application/json" \
--d '{"categoria": "bolo"}'
+curl -X DELETE http://localhost:8000/categoria/outros
 
