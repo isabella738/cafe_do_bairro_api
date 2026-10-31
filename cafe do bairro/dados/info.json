@@ -1,7 +1,5 @@
-[
-    {
-        "nome": "Maria da Silva",
-        "whatsapp": "73900000000",
-        "endereco": "Salobrinho, Bairro B, Rua R, Número N"
-    }
-]
+{
+    "nome": "Maria da Silva",
+    "whatsapp": "73900000000",
+    "endereco": "Salobrinho, Bairro B, Rua R, Número N"
+}

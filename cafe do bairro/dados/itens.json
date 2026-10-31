@@ -1,9 +1,30 @@
 [
     {
         "nome": "Bolo de Laranja",
-        "categoria": "bolo",
+        "categoria": "outros",
         "valor": "9,99",
         "status": 1,
         "codigo": "a5ria"
+    },
+    {
+        "nome": "Café Expresso",
+        "categoria": "bebida",
+        "valor": "3,99",
+        "status": 1,
+        "codigo": "jjuFF"
+    },
+    {
+        "nome": "Bolo de Chocolate",
+        "categoria": "outros",
+        "valor": "9,99",
+        "status": 1,
+        "codigo": "bVkl0"
+    },
+    {
+        "nome": "Brigadeiro 10 unidades",
+        "categoria": "doces",
+        "valor": "9,99",
+        "status": 1,
+        "codigo": "Df3eh"
     }
 ]

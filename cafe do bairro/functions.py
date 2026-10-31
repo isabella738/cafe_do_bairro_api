@@ -2,84 +2,95 @@ from datetime import datetime, date
 import random
 import string
 import json
-import os
 
-# verificam formato de entrada e outras coisas
-def verificar_valor(valor):
-    if not isinstance(valor, str) or not valor.strip():
+# verificam formato da entrada 
+
+def verificar_string(nome):
+    if not isinstance(nome, str) or not nome.strip():
         return "conteudo invalido."
+    
+    return ""
+
+def verificar_int(numero, a, b):
+    if not isinstance(numero, int):
+        return "conteudo invalido."
+    
+    if numero < a or numero > b:
+        return "intervalo inválido"
+
+    return ""
+
+def verificar_valor(valor):
+    if (erro := verificar_string(valor)) != "":
+        return erro
 
     partes = valor.split(",")
-    if len(partes) != 2 or not partes[0].isdigit() or not partes[1].isdigit or len(partes[1]) != 2:
+    if len(partes) != 2 or not partes[0].isdigit() or not partes[1].isdigit() or len(partes[1]) != 2:
         return "formato monetario invalido."
 
     return ""
 
-def verificar_nome_produto(nome, lista):
-    if not isinstance(nome, str) or not nome.strip():
-        return "conteudo invalido."
-    
-    if item_duplicado(nome, lista):
-        return "ja existe produto com este nome."
-    
-    return ""
-
 def verificar_telefone(telefone):
-    if not isinstance(telefone, str) or not telefone.strip():
-        return "conteudo invalido."
+    if (erro := verificar_string(telefone)) != "":
+        return erro
     
     if not telefone.isdigit() or len(telefone) != 11:
         return "formato de telefone invalido."
     
     return ""
 
-def verificar_data(prazo, lista):
-    data = 0
+def verificar_data(prazo):
     try:
-        data = datetime.strptime(prazo, "%Y-%m-%d").date()
+        dia = datetime.strptime(prazo, "%Y-%m-%d").date()
 
-        if data <= date.today():
-            return "o pedido deve ser feito com 24 horas de antecedência."
+        if horas_ate(prazo) <= 0:
+            return "a data já passou."
 
     except (ValueError, TypeError):
         return "data invalida."
     
-    if bolos_no_dia(prazo, lista) >= 5:
-        return "maximo alcançado de encomendas feitas para este dia."
-    
+    return ""
+
+def pertence(item, lista):
+    if not item in lista:
+        return "campo/item não pertence ao objeto."
     return ""
 
 def verificar_pedido(codigos, lista_itens, lista_pedidos, data):
-    itens = [retornar_item(codigo, lista_itens) for codigo in codigos]
-
-    if len(itens) <= 0:
+    if not isinstance(codigos, list) or len(codigos) <= 0:
         return "pedido vazio."
 
-    for item in itens:
-        if not any(item["nome"] == produto["nome"] for produto in lista_itens):
-            return "um ou mais produtos não existem no cardápio."
-        if item["status"] == 0:
-            return "item temporariamente indisponível."
+    itens = [retornar_item(codigo, lista_itens) for codigo in codigos]
 
-    bolos = sum(1 for item in itens if item["categoria"] == "bolo")
-    if bolos + bolos_no_dia(data, lista_pedidos) >= 5:
-        return "o pedido estoura o máximo permitido de encomendas feitas para este dia."
+    if any(item == -1 for item in itens):
+        return "pedido contém itens inexistentes."
+
+    if any(item["status"] == 0 for item in itens):
+        return "pedido contém itens indisponíveis."
     
     return ""
 
 # outros
-def bolos_no_dia(data, lista):
-    bolos = 0
-    for pedido in lista:
+def disponibilidade(data, codigos, lista_pedidos, lista_itens):
+    if not isinstance(codigos, list) or len(codigos) <= 0:
+        return "pedido vazio."
+
+    itens = [retornar_item(codigo, lista_itens) for codigo in codigos]
+
+    bolos = sum(1 for i in itens if i["categoria"] == "bolo")
+
+    for pedido in lista_pedidos:
         if pedido["prazo"] == data:
-            bolos += sum(1 for item in pedido["itens"] if item["categoria"] == "bolo")
+            itens = [retornar_item(codigo, lista_itens) for codigo in pedido["itens"]]
+            bolos += sum(1 for item in itens if item["categoria"] == "bolo")
+    
+    if bolos > 5:
+        return "limite diário de encomendas alcançado para este dia."
+    return ""
 
-    return bolos
-
-def item_duplicado(nome, lista):
-    if any(item["nome"] == nome for item in lista):
-        return 1
-    return 0
+def horas_ate(data): # pressupõe-se que o formato já esteja verificado ao chegar aqui
+    dia = datetime.strptime(data, "%Y-%m-%d").date()
+    return (dia - date.today()).total_seconds()/3600
 
 def gerar_codigo(lista):
     caracteres = string.ascii_uppercase + string.ascii_lowercase + string.digits
@@ -100,8 +111,7 @@ def retornar_item(codigo, lista):
 def salvar_dados(nome, variavel):
     try:
         with open("dados/" + nome, "w", encoding="utf-8") as arquivo:
-            ponto = nome.find(".")
-            if nome[ponto + 1:] == "json":
+            if nome.endswith(".json"):
                 json.dump(variavel, arquivo, ensure_ascii=False, indent=4)
             else:
                 arquivo.write("\n".join(variavel))
@@ -112,14 +122,11 @@ def salvar_dados(nome, variavel):
 def carregar_dados(nome):
     try:
         with open("dados/" + nome, "r", encoding = "utf-8") as arquivo:
-            ponto = nome.find(".")
-            if nome[ponto + 1:] == "json":
+            if nome.endswith(".json"):
                 variavel = json.load(arquivo)
             else:
                 variavel = arquivo.read().splitlines()
             
             return variavel
     except FileNotFoundError:
-        print(f"dados/{nome}")
-        print("Diretório atual:", os.getcwd())
         raise 
