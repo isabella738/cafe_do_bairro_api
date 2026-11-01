@@ -1,8 +1,8 @@
 # Onde o servidor é iniciado
 
 from http.server import HTTPServer, BaseHTTPRequestHandler
-from save import carregar_dados, salvar_dados, autenticar
-from endpoints import direcionar_requisicao
+from direcionamento import direcionar_requisicao
+from save import *
 import json
 import sys
 

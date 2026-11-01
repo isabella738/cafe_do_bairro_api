@@ -21,7 +21,7 @@ def salvar_dados():
         return 204, ""
 
     except FileNotFoundError:
-        return 404, "arquivo não encontrado." 
+        return 404, "arquivo não encontrado para salvar dados." 
 
 def carregar_dados():
     try:

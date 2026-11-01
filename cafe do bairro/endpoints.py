@@ -21,7 +21,7 @@ def exibir_pedidos(caminho, usuario):
 
     # se não for administrador
     if not usuario["adm"]:
-        lista_filtrada = [i for i in v.lista_pedidos if i["usuario"] == usuario["nome"]]
+        lista_filtrada = [i for i in v.lista_pedidos if i["nome"] == usuario["nome"]]
 
         if not chave:
             return 200, lista_filtrada
@@ -102,7 +102,7 @@ def criar_pedido(dados, usuario):
 
     # observações sobre o pedido, se houver
     comentario = dados.get("comentario")
-    if not comentario is None:
+    if comentario:
         mensagens.append(verificar_string(comentario))
 
     # envio de erros
@@ -156,7 +156,7 @@ def criar_produto(dados, usuario):
 
     # descricao do produto
     descricao = dados.get("descricao")
-    if not descricao is None:
+    if descricao:
         mensagens.append(verificar_string(descricao))
 
     # envio de erros
@@ -262,7 +262,7 @@ def login(dados):
     for user in v.usuarios:
         if user["nome"] == nome:
             if user["senha"] == senha:
-                token = gerar_codigo(v.tokens)
+                token = gerar_token()
                 v.tokens[token] = user["nome"]
                 return 200, {"token":token}
             
@@ -278,19 +278,29 @@ def logout(token):
         return 204, ""
     return 404, "não encontrado."
 
-def editar_usuario(dados, usuario):
+def editar_usuario(dados, caminho, usuario):
     # Praticamente, serve só para adms que querem mudar a flag de adm de outro usuário,
     # pois o nome funciona como código e senha é editada em outro caminho, mas tá aí 
     # qualquer coisa
 
     if not usuario:
         return 400, "sessão não iniciada."
-    
+
+    nome = caminho[1] if len(caminho) > 1 else None
+
+    if (erro := verificar_string(nome)):
+        return 400, erro
+
     for user in v.usuarios:
-        if user == usuario:
+        if user["nome"] == nome:
 
             novo = user.copy()
             for chave, conteudo in dados.items():
+
+                # tentar alterar o campo de um usuário que não é o mesmo da sessão,
+                # se este campo não for adm
+                if chave != "adm" and user["nome"] != usuario["nome"]:
+                    return 403, "sem permissão para esta ação."
 
                 erro = ""
                 match chave:
@@ -301,9 +311,9 @@ def editar_usuario(dados, usuario):
                     case "adm":
                         if not usuario["adm"]:
                             return 403, "não tem permissão para essa ação."
-                        erro = verificar_string(conteudo, 0, 1)
+                        erro = verificar_int(conteudo, 0, 1)
                     case _:
-                        return 404, "campo não encotrado."
+                        return 404, "campo não encontrado."
                 
                 if not erro:
                     novo[chave] = conteudo
@@ -347,7 +357,7 @@ def editar_pedido(dados, caminho, usuario):
             novo = pedido.copy()
             for chave, conteudo in dados.items():
 
-                if chave != status:
+                if chave != "status":
                     if pedido["nome"] != usuario["nome"]:
                         return 403, "sem permissão para realizar esta ação."
                 
@@ -360,7 +370,7 @@ def editar_pedido(dados, caminho, usuario):
                     case "itens":
                         erro = verificar_pedido(conteudo, v.lista_itens) or disponibilidade(pedido["prazo"], conteudo, pedido)
                     case "comentario":
-                        if not conteudo is None:
+                        if conteudo:
                             erro = verificar_string(conteudo)
                     case "status":
                         if not usuario["adm"]:
@@ -417,7 +427,7 @@ def editar_produto(dados, caminho, usuario):
                     case "status":
                         erro = verificar_int(conteudo, 0, 1)
                     case "descricao":
-                        if not conteudo is None:
+                        if conteudo:
                             erro = verificar_string(conteudo)
                     case "codigo":
                         return 403, "campo não é editável."
@@ -563,12 +573,15 @@ def remover_usuario(caminho, dados, usuario):
             
             # Se não é adm, precisa confirmar a senha
             if not usuario["adm"]:
+                if not isinstance(dados, dict):
+                    return 400, "dados inválidos ou faltando."
+
                 confirmacao = dados.get("confirmacao")
                 if confirmacao != user["senha"]:
                     return 403, "senhas não coincidem."
 
             # Excluir pedidos no nome desta pessoa
-            v.lista_pedidos = [i for i in v.lista_pedidos if pedido["nome"] != nome]
+            v.lista_pedidos = [i for i in v.lista_pedidos if i["nome"] != nome]
 
             # Deslogar todas as sessões no nome deste usuario
             for token, nome_usuario in list(v.tokens.items()):

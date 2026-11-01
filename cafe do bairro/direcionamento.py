@@ -1,4 +1,4 @@
-from functions import *
+from endpoints import *
 
 def direcionar_requisicao(metodo, caminho, dados, usuario, token):
     retorno = ""
@@ -31,9 +31,9 @@ def direcionar_requisicao(metodo, caminho, dados, usuario, token):
                 status, retorno = criar_categoria(dados, usuario)
             case "usuario":
                 status, retorno = criar_usuario(dados)
-    
+            
     elif metodo == "PATCH":
-        if not isinstance(dados, dict):
+        if not isinstance(dados, dict) and caminho[0] != "logout":
             return 400, "dados inválidos"
 
         match caminho[0]:
@@ -44,14 +44,14 @@ def direcionar_requisicao(metodo, caminho, dados, usuario, token):
             case "logout":
                 status, retorno = logout(token)
             case "usuario":
-                status, retorno = editar_usuario(dados, usuario)
+                status, retorno = editar_usuario(dados, caminho, usuario)
             case "encomenda":
                 status, retorno = editar_pedido(dados, caminho, usuario)
             case "produto":
                 status, retorno = editar_produto(dados, caminho, usuario)
             case "info":
                 status, retorno = editar_info(dados, usuario)
-
+        
     elif metodo == "DELETE":
         match caminho[0]:
             case "encomenda":
@@ -62,7 +62,7 @@ def direcionar_requisicao(metodo, caminho, dados, usuario, token):
                 status, retorno = remover_categoria(caminho, usuario)
             case "usuario":
                 status, retorno = remover_usuario(caminho, dados, usuario)
-    
+            
     if status:
         return status, retorno 
 

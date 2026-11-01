@@ -2,3 +2,4 @@ bebida
 salgado
 outros
 doces
+bolo

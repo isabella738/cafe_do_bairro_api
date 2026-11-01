@@ -1,9 +1,9 @@
 [
     {
         "nome": "Bolo de Cenoura",
-        "categoria": "outros",
-        "valor": "9,99",
-        "descricao": "Com ou sem cobertura de chocolate. Alérgicos: contém lactose",
+        "categoria": "bolo",
+        "valor": "14,99",
+        "descricao": "Com cobertura de chocolate",
         "status": 1,
         "codigo": "a5ria"
     },
@@ -16,35 +16,27 @@
         "codigo": "jjuFF"
     },
     {
-        "nome": "Bolo de Chocolate",
-        "categoria": "outros",
+        "nome": "Bolo Formigueiro",
+        "categoria": "bolo",
         "valor": "9,99",
-        "descricao": null,
+        "descricao": "Receita de família!",
         "status": 1,
         "codigo": "bVkl0"
-    },
-    {
-        "nome": "Brigadeiro 10 unidades",
-        "categoria": "doces",
-        "valor": "9,99",
-        "descricao": null,
-        "status": 1,
-        "codigo": "Df3eh"
-    },
-    {
-        "nome": "Brigadeiro 20 unidades",
-        "categoria": "doces",
-        "valor": "19,99",
-        "descricao": null,
-        "status": 1,
-        "codigo": "DRT0Z"
     },
     {
         "nome": "Pão de Queijo",
         "categoria": "salgado",
         "valor": "9,99",
-        "descricao": "aviso: contem glútem",
+        "descricao": "5 unidades",
         "status": 1,
-        "codigo": "oCBmr"
+        "codigo": "8WzbN"
+    },
+    {
+        "nome": "Bolo de Chocolate",
+        "categoria": "bolo",
+        "valor": "9,99",
+        "descricao": "Com bastante calda de chocolate!",
+        "status": 1,
+        "codigo": "PSSDD"
     }
 ]

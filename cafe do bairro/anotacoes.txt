@@ -88,20 +88,24 @@ CAMINHOS
 GET 4/4 OK
 
 //ver pedidos OK
-curl -X GET http://localhost:8000/encomenda
+curl -X GET http://localhost:8000/encomenda \
+-H "Authorization: Bearer Nxumq" \
+
 
 //ver itens OK
-curl -X GET http://localhost:8000/produto
+curl -X GET http://localhost:8000/produto/categoria/bolo
 
 //ver info OK
 curl -X GET http://localhost:8000/info
+
 
 ---------------------------------------------------------------
 POST 3/3
 //criar pedido OK
 curl -X POST http://localhost:8000/encomenda \
 -H "Content-Type: application/json" \
--d '{"nome": "Zé Maria", "telefone":"73900000000", "prazo":"2026-11-01", "itens": ["a5ria"], "comentario":"com bastante calda de chocolate"}'
+-H "Authorization: Bearer i59Er" \
+-d '{"telefone":"73999999999", "prazo":"2026-11-10", "itens": ["jjuFF", "bVkl0"], "comentario":"meu bem, será que você poderia colocar o nome da minha neta, Maria, no bolo de chocolate? é para o aniversário dela, 4 aninhos... mas já está uma moça. ah, o café é para mim, sou diabética, então se puder não colocar açúcar será melhor ainda. deus abençoe"}'
 
 //criar item OK
 curl -X POST http://localhost:8000/produto \
@@ -113,8 +117,22 @@ curl -X POST http://localhost:8000/categoria \
 -H "Content-Type: application/json" \
 -d '{"categoria": "bolo"}'
 
+curl -X POST http://localhost:8000/usuario \
+-H "Content-Type: application/json" \
+-d '{"nome": "Gertrudes", "senha":"senha"}'
+
 ---------------------------------------------------------------
 PATCH 4/6
+LOGIN
+curl -X PATCH http://localhost:8000/login \
+-H "Content-Type: application/json" \
+-d '{"nome": "Marta", "senha":"senha"}'
+
+LOGOUT
+curl -X PATCH http://localhost:8000/logout \
+-H "Authorization: Bearer 0bhOt" \
+
+
 curl -X PATCH http://localhost:8000/encomenda/pe3ED \
 -H "Content-Type: application/json" \
 -d '{"status": 2}'

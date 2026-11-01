@@ -1,39 +1,39 @@
 [
     {
-        "nome": "Gertrudes",
+        "nome": "ZéMaria",
         "telefone": "73900000000",
-        "prazo": "2026-10-31",
+        "prazo": "2026-11-02",
         "itens": [
+            "jjuFF",
             "a5ria",
-            "bVkl0",
-            "bVkl0",
-            "a5ria",
+            "a5ria"
+        ],
+        "comentario": "café sem açúcar, por favor.",
+        "status": 2,
+        "codigo": "mjGbu"
+    },
+    {
+        "nome": "Gertrudes",
+        "telefone": "71988000000",
+        "prazo": "2026-11-03",
+        "itens": [
             "bVkl0"
         ],
-        "comentario": null,
-        "status": 1,
-        "codigo": "pSB7c"
-    },
-    {
-        "nome": "Epaminondas",
-        "telefone": "73900000000",
-        "prazo": "2026-11-01",
-        "itens": [
-            "a5ria"
-        ],
-        "comentario": null,
-        "status": 2,
-        "codigo": "pe3ED"
-    },
-    {
-        "nome": "Zé Maria",
-        "telefone": "73900000000",
-        "prazo": "2026-11-01",
-        "itens": [
-            "a5ria"
-        ],
-        "comentario": "com bastante calda de chocolate",
+        "comentario": "boa tarde meu bem, meu marido comprou um bolo formigueiro com você uma vez e gostei bastante, veio com calda de chocolate, será que você poderia fazer da mesma forma? beijos, deus abençoe",
         "status": 0,
-        "codigo": "1Dec0"
+        "codigo": "mjGbu"
+    },
+    {
+        "nome": "Gertrudes",
+        "telefone": "71988000000",
+        "prazo": "2026-11-07",
+        "itens": [
+            "PSSDD",
+            "8WzbN",
+            "8WzbN"
+        ],
+        "comentario": "oi meu bem, bom dia, você pode escrever o nome da minha netinha Maria no bolo? do jeito que você preferir. dia 7 é aniversário dessa mocinha e o bolo favorito dela é de chocolate, então pode caprichar. me chame no zap qualquer coisa. beijos, deus abençoe",
+        "status": 1,
+        "codigo": "mjGbu"
     }
 ]

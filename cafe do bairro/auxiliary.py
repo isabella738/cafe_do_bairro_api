@@ -1,4 +1,4 @@
-# Funções de auxílio às principais em functions.py
+# Funções de auxílio às principais em endpoints.py
 
 from datetime import datetime, date
 import variables as v
@@ -38,7 +38,16 @@ def gerar_codigo(lista):
     while True:
         codigo = "".join(random.choices(caracteres, k=5))
 
-        if not any(codigo == pedido["codigo"] for pedido in lista):
+        if not any(codigo == i["codigo"] for i in lista):
+            return codigo
+
+def gerar_token():
+    caracteres = string.ascii_uppercase + string.ascii_lowercase + string.digits
+
+    while True:
+        codigo = "".join(random.choices(caracteres, k=5))
+
+        if not any(codigo == token for token in v.tokens):
             return codigo
 
 def retornar_item(codigo, lista):
@@ -48,7 +57,7 @@ def retornar_item(codigo, lista):
     return -1
 
 def usuario_existe(nome):
-    if any(user["nome"] == nome for user in usuarios):
+    if any(user["nome"] == nome for user in v.usuarios):
         return 1
     return 0
 

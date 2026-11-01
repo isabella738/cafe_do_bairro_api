@@ -1,1 +1,22 @@
-[]
+[
+    {
+        "nome": "Marta",
+        "senha": "senha",
+        "adm": 1
+    },
+    {
+        "nome": "MaridoDeMarta",
+        "senha": "senha",
+        "adm": 1
+    },
+    {
+        "nome": "Gertrudes",
+        "senha": "senha",
+        "adm": 0
+    },
+    {
+        "nome": "ZéMaria",
+        "senha": "senha",
+        "adm": 0
+    }
+]
