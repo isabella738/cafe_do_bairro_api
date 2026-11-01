@@ -62,10 +62,10 @@ Sem uma sessão iniciada, só é possível fazer a ação de visualizar itens e 
 
 ### 2. Criar (POST)
 É possível criar novo pedido, item, categoria e usuário. Criar item e categoria é exclusivo de administradores.  
-É esperado que o cliente envie apenas um arquivo .json com as informações do novo resurso.  
+É esperado que o cliente envie apenas em formato .json as informações do novo resurso.  
 
 ### 3. Atualizar (PATCH)
-Atualizar significa modificar alguma informação de usuário, item, pedido ou informação da padaria. O caminho especifica qual objeto vai ser alterado (ou seja, só importa para item e pedido). É esperado que os campos a serem alterados sejam enviados num arquivo .json.  
+Atualizar significa modificar alguma informação de usuário, item, pedido ou informação da padaria. O caminho especifica qual objeto vai ser alterado (ou seja, só importa para item e pedido). É esperado que os campos a serem alterados sejam enviados em formato json.  
 
 Somente administradores podem alterar itens, informações da padaria, o status de um pedido e a flag de um usuário. Fora isso, somente o dono do pedido ou perfil consegue alterar suas informações.  
 
@@ -87,7 +87,7 @@ O backend é separado em 6 arquivos:
 - direcionamento.py: define as funções a serem executadas com base na requisição do cliente.
 - .main.py: onde o servidor é iniciado.   
 
-Os dados são guardados na subpasta 'dados' em json ou txt dedicados para cada tipo de dado.
+Os dados são guardados na subpasta 'dados' em json ou txt dedicados para cada tipo de dado. No momento eles possuem conteúdo, meramente ilustrativo, e podem sre apagados se quiser. Mas, preferencialmente, não apague o usuário 'Marta' nem 'MaridoDeMarta', que são os únicos administradores. Um usuário só pode se tornar adm através de outro adm, a não ser que seja alterado diretamente no arquivo.  
 
 ### Pontos Fracos
 1. Não existe criptografia de senhas e tokens, nem tráfego seguro de dados. Além de que não há verificação de endereço de IP, então inúmeras tentativas de login podem ser feitas por segundo.
