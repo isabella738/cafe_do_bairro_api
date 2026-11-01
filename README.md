@@ -1,5 +1,5 @@
 # API Cafe do Bairro
-API para aplicativo de organização de encomendas de uma padaria.  
+API para aplicativo de organização de encomendas de bolo, e outras coisas.  
 
 ## Visão Geral
 O programa é escrito em python (compatível com versões a partir da 3.10). Para rodar o servidor, basta baixar o arquivo do projeto e e executar o arquivo .main.py.  
