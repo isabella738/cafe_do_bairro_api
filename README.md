@@ -87,7 +87,7 @@ O backend é separado em 6 arquivos:
 - direcionamento.py: define as funções a serem executadas com base na requisição do cliente.
 - .main.py: onde o servidor é iniciado.   
 
-Os dados são guardados na subpasta 'dados' em json ou txt dedicados para cada tipo de dado. No momento eles possuem conteúdo, meramente ilustrativo, e podem sre apagados se quiser. Mas, preferencialmente, não apague o usuário 'Marta' nem 'MaridoDeMarta', que são os únicos administradores. Um usuário só pode se tornar adm através de outro adm, a não ser que seja alterado diretamente no arquivo.  
+Os dados são guardados na subpasta 'dados' em json ou txt dedicados para cada tipo de dado. No momento eles possuem conteúdo, meramente ilustrativo, e podem sre apagados se quiser. Mas, preferencialmente, não apague o usuário 'Marta' nem 'Jorge', que são os únicos administradores. Um usuário só pode se tornar adm através de outro adm, a não ser que seja alterado diretamente no arquivo.  
 
 ### Pontos Fracos
 1. Não existe criptografia de senhas e tokens, nem tráfego seguro de dados. Além de que não há verificação de endereço de IP, então inúmeras tentativas de login podem ser feitas por segundo.
