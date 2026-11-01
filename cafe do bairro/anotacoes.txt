@@ -1,10 +1,14 @@
 *anexar imagens!!
 
+campos usuario: nome, senha, adm, 
+um usuario so poed receber a flag de adm se estiver logado em uma conta de adm
+flag 0 = cliente, 1 = adm
 
 
-
-
-
+curl -X POST http://localhost:8000/pedido \
+-H "Content-Type: application/json" \
+-H "Authorization: Bearer A8F91C" \
+-d '{"telefone":"73900000000","prazo":"2026-11-05","itens":["001"]}'
 
 produto, categoria, encomenda, informação, cardápio
 
@@ -17,7 +21,7 @@ item:
     codigo*
 
 pedido
-    nome da pessoa
+    usuario
     telefone
     prazo
     itens (lista de numeros)

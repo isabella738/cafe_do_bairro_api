@@ -12,6 +12,9 @@ def salvar_dados():
         with open("dados/info.json", "w", encoding="utf-8") as arquivo:
             json.dump(v.info, arquivo, ensure_ascii=False, indent=4)
 
+        with open("dados/usuarios.json", "w", encoding="utf-8") as arquivo:
+            json.dump(v.usuarios, arquivo, ensure_ascii=False, indent=4)
+
         with open("dados/categorias.txt", "w", encoding="utf-8") as arquivo:
             arquivo.write("\n".join(v.categorias))
 
@@ -30,6 +33,9 @@ def carregar_dados():
 
         with open("dados/info.json", "r", encoding="utf-8") as arquivo:
             v.info = json.load(arquivo)
+        
+        with open("dados/usuarios.json", "r", encoding="utf-8") as arquivo:
+            v.usuarios = json.load(arquivo)
 
         with open("dados/categorias.txt", "r", encoding="utf-8") as arquivo:
             v.categorias = arquivo.read().splitlines()
@@ -38,3 +44,12 @@ def carregar_dados():
             
     except FileNotFoundError:
         return 0 
+
+def autenticar(token):
+    for t in v.tokens:
+        if token == t:
+            nome = v.tokens.get(token)
+            for usuario in v.usuarios:
+                if usuario["nome"] == nome:
+                    return usuario
+    return ""

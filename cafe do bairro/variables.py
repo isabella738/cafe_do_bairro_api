@@ -3,4 +3,6 @@
 lista_itens = []
 lista_pedidos = []
 categorias = []
+usuarios = []
 info = {}
+tokens = {}

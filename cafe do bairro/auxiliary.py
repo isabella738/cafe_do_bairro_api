@@ -47,6 +47,11 @@ def retornar_item(codigo, lista):
             return item
     return -1
 
+def usuario_existe(nome):
+    if any(user["nome"] == nome for user in usuarios):
+        return 1
+    return 0
+
 # Validação
 def verificar_string(nome):
     # verifica se é string e não vazia

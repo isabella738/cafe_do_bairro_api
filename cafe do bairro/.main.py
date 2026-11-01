@@ -1,7 +1,7 @@
 # Onde o servidor é iniciado
 
 from http.server import HTTPServer, BaseHTTPRequestHandler
-from save import carregar_dados, salvar_dados
+from save import carregar_dados, salvar_dados, autenticar
 from endpoints import direcionar_requisicao
 import json
 import sys
@@ -25,6 +25,12 @@ class Servidor(BaseHTTPRequestHandler):
         self.processar()
 
     def processar(self):
+        token = self.headers.get("Authorization")
+        usuario = None
+
+        if token:
+            token = token.replace("Bearer ", "")
+            usuario = autenticar(token)
 
         tam = int(self.headers.get("Content-Length", 0))
         corpo = self.rfile.read(tam).decode("utf-8") if tam else ""
@@ -35,7 +41,7 @@ class Servidor(BaseHTTPRequestHandler):
             self.enviar(400, {"erro": "JSON inválido."})
             return
     
-        codigo, retorno = direcionar_requisicao(self.command, self.path, dados)
+        codigo, retorno = direcionar_requisicao(self.command, self.path, dados, usuario, token)
         salvar_dados()
         self.enviar(codigo, retorno)
 
@@ -50,7 +56,7 @@ class Servidor(BaseHTTPRequestHandler):
         self.wfile.write(corpo)
 
 if __name__ == "__main__":
-    servidor = HTTPServer(("localhost", 8000), Servidor)
+    servidor = HTTPServer(("0.0.0.0", 8000), Servidor)
 
     print("Servidor iniciado em http://localhost:8000")
 
