@@ -102,7 +102,8 @@ def criar_pedido(dados, usuario):
 
     # observações sobre o pedido, se houver
     comentario = dados.get("comentario")
-    mensagens.append(verificar_string(comentario))
+    if not comentario is None:
+        mensagens.append(verificar_string(comentario))
 
     # envio de erros
     erros = [m for m in mensagens if m != ""]
@@ -155,7 +156,8 @@ def criar_produto(dados, usuario):
 
     # descricao do produto
     descricao = dados.get("descricao")
-    mensagens.append(verificar_string(descricao))
+    if not descricao is None:
+        mensagens.append(verificar_string(descricao))
 
     # envio de erros
     erros = [m for m in mensagens if m != ""]
@@ -329,6 +331,8 @@ def editar_pedido(dados, caminho, usuario):
         return 400, erro
 
     for pedido in v.lista_pedidos:
+        # Tirando o status, somente os donos dos proprios pedidos podem alterar um campo dele
+
         if codigo == pedido["codigo"]:
 
             # Bloqueios de não administradores
@@ -342,6 +346,10 @@ def editar_pedido(dados, caminho, usuario):
             # Mudanças de fato
             novo = pedido.copy()
             for chave, conteudo in dados.items():
+
+                if chave != status:
+                    if pedido["nome"] != usuario["nome"]:
+                        return 403, "sem permissão para realizar esta ação."
                 
                 erro = ""
                 match chave:
@@ -352,7 +360,8 @@ def editar_pedido(dados, caminho, usuario):
                     case "itens":
                         erro = verificar_pedido(conteudo, v.lista_itens) or disponibilidade(pedido["prazo"], conteudo, pedido)
                     case "comentario":
-                        erro = verificar_string(conteudo)
+                        if not conteudo is None:
+                            erro = verificar_string(conteudo)
                     case "status":
                         if not usuario["adm"]:
                             return 403, "sem permissão para esta ação."
@@ -408,7 +417,8 @@ def editar_produto(dados, caminho, usuario):
                     case "status":
                         erro = verificar_int(conteudo, 0, 1)
                     case "descricao":
-                        erro = verificar_string(conteudo)
+                        if not conteudo is None:
+                            erro = verificar_string(conteudo)
                     case "codigo":
                         return 403, "campo não é editável."
                     case _:
